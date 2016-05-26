@@ -46,7 +46,7 @@ def job(url, manga_name):
         # That Unicode Stuff sucks so hard...
         save_path = os.path.dirname(os.path.realpath(__file__)) + '/' + manga_name.decode('utf-8') + '/'
 
-        print("Download URL: ", url)
+        #print("Download URL: ", url)
         with open(os.path.join(save_path, file_name), "wb") as file:
             response = get(url)
             file.write(response.content)
