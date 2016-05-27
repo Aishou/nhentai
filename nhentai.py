@@ -39,9 +39,11 @@ def print_header():
 
 def job(url, manga_name):
     def download(url, file_name, manga_name):
-
-        if not os.path.exists(manga_name):
+        try:
             os.makedirs(manga_name)
+        except OSError:
+            if not os.path.isdir(manga_name):
+                raise
 
         # That Unicode Stuff sucks so hard...
         save_path = os.path.dirname(os.path.realpath(__file__)) + '/' + manga_name.decode('utf-8') + '/'
@@ -79,12 +81,17 @@ def work(hentai):
 
         # Getting Basic Info about doujinshi...
     manga_name      = soup.find("div", {"id": "info"}).h1.text.encode('utf-8')
-    manga_pages     = int(soup.find("div", {"id": "info"}).find_all('div')[7].text.split(' ')[0])
     manga_image_id  = int(soup.find("div", {"id": "cover"}).img['src'].split('/')[4])
+
+    # Find Manga Pages Count
+    for element in soup.find("div", {"id": "info"}).find_all('div'):
+        if "pages" in element.text:
+            manga_pages = int(element.text.split(' ')[0])
+            break
 
     print("Manga:    ", manga_name.decode('utf-8'))
     print("Pages:    ", manga_pages)
-    print("Image ID: ", manga_image_id)
+    #print("Image ID: ", manga_image_id)
 
     manga_urls = []
 
@@ -92,11 +99,14 @@ def work(hentai):
         manga_url = "http://i.nhentai.net/galleries/{0}/{1}.".format(manga_image_id, i)
         manga_urls.append(manga_url)
 
-
     executor = concurrent.futures.ProcessPoolExecutor()
-    futures = [executor.submit(job, manga_url, manga_name) for manga_url in manga_urls]
+    futures = {executor.submit(job, manga_url, manga_name): manga_url for manga_url in manga_urls}
     concurrent.futures.wait(futures)
 
+    for future in concurrent.futures.as_completed(futures):
+        manga_url = futures[future]
+        if future.exception() is not None:
+            print('%r generated an exception: %s' % (manga_url, future.exception()))
 
 #    print(futures[0].done())
 #    sleep(5)
