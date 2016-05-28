@@ -26,40 +26,41 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 from time import sleep
 import argparse
+from config import *
 
 def print_header():
-    longstring = """\
+    header_string = """\
       _               _        _
 ._ _ | |_  ___ ._ _ _| |_ ___ <_>    ___  _ _
 | ' || . |/ ._>| ' | | | <_> || | _ | . \| | |
-|_|_||_|_|\___.|_|_| |_| <___||_|<_>|  _/`_. |
+|_|_||_|_|\___.|_|_| |_| <___||_|<_>|  _/`_. |  {0}
                                     |_|  <___'
-"""
-    print(longstring)
+""".format(config['general']['version'])
+    print(header_string)
 
 def job(url, manga_name):
     def download(url, file_name, manga_name):
-        try:
-            os.makedirs(manga_name)
-        except OSError:
-            if not os.path.isdir(manga_name):
-                raise
-
         # That Unicode Stuff sucks so hard...
-        save_path = os.path.dirname(os.path.realpath(__file__)) + '/' + manga_name.decode('utf-8') + '/'
-
+        if config['general']['save_path']:
+            manga_path = os.path.dirname(config['general']['save_path']) + '/' + \
+            manga_name.decode('utf-8') + '/'
+        else:
+            manga_path = os.path.dirname(os.path.realpath(__file__)) + '/' + \
+            manga_name.decode('utf-8') + '/'
+        try:
+            os.makedirs(manga_path)
+        except OSError:
+            if not os.path.isdir(manga_path):
+                raise
         #print("Download URL: ", url)
-        with open(os.path.join(save_path, file_name), "wb") as file:
+        with open(os.path.join(manga_path, file_name), "wb") as file:
             response = get(url)
             file.write(response.content)
-
     try:
         # Get HTTP Status Code
         # nhentai uses not only jpg.. argh
         # if 404 try some other Formats...
         # TODO: Rework this to read format out of HTML..
-
-        #print(manga_name)
         formats = ["jpg", "png", "gif"]
 
         for i in formats:
@@ -79,7 +80,7 @@ def work(hentai):
     page = urlopen(req).read()
     soup = BeautifulSoup(page, "lxml")
 
-        # Getting Basic Info about doujinshi...
+    # Getting Basic Info about doujinshi...
     manga_name      = soup.find("div", {"id": "info"}).h1.text.encode('utf-8')
     manga_image_id  = int(soup.find("div", {"id": "cover"}).img['src'].split('/')[4])
 
@@ -116,6 +117,7 @@ def work(hentai):
 if __name__ == "__main__":
 
     print_header()
+    print(config['general']['save_path'])
     #Command line arguement parser
     parser = argparse.ArgumentParser(description='https://nhentai.net/g/xxxx')
     parser.add_argument('URL', help='https://nhentai.net/g/xxxx')
