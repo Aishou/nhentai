@@ -40,13 +40,16 @@ def print_header():
 
 def job(url, manga_name):
     def download(url, file_name, manga_name):
+        if config['general']['short_title'] == 0:
+            manga_name = manga_name.decode('utf-8')
+
         # That Unicode Stuff sucks so hard...
         if config['general']['save_path']:
             manga_path = os.path.dirname(config['general']['save_path']) + '/' + \
-            manga_name.decode('utf-8') + '/'
+            manga_name + '/'
         else:
             manga_path = os.path.dirname(os.path.realpath(__file__)) + '/' + \
-            manga_name.decode('utf-8') + '/'
+            manga_name + '/'
         try:
             os.makedirs(manga_path)
         except OSError:
@@ -81,7 +84,10 @@ def work(hentai):
     soup = BeautifulSoup(page, "lxml")
 
     # Getting Basic Info about doujinshi...
-    manga_name      = soup.find("div", {"id": "info"}).h1.text.encode('utf-8')
+    if config['general']['short_title']:
+        manga_name  = soup.title.string.split('»')[0]
+    else:
+        manga_name  = soup.find("div", {"id": "info"}).h1.text.encode('utf-8')
     manga_image_id  = int(soup.find("div", {"id": "cover"}).img['src'].split('/')[4])
 
     # Find Manga Pages Count
@@ -89,8 +95,10 @@ def work(hentai):
         if "pages" in element.text:
             manga_pages = int(element.text.split(' ')[0])
             break
-
-    print("Manga:    ", manga_name.decode('utf-8'))
+    if config['general']['short_title']:
+        print("Manga:    ", manga_name)
+    else:
+        print("Manga:    ", manga_name.decode('utf-8'))
     print("Pages:    ", manga_pages)
     #print("Image ID: ", manga_image_id)
 
@@ -117,7 +125,6 @@ def work(hentai):
 if __name__ == "__main__":
 
     print_header()
-    print(config['general']['save_path'])
     #Command line arguement parser
     parser = argparse.ArgumentParser(description='https://nhentai.net/g/xxxx')
     parser.add_argument('URL', help='https://nhentai.net/g/xxxx')

@@ -19,6 +19,7 @@
 config = {
     "general": {
         "version": "0.0.1",
-        "save_path": ""
+        "save_path": "",
+        "short_title": 0
     }
 }
