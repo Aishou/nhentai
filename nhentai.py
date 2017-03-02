@@ -88,7 +88,7 @@ def work(hentai):
         manga_name  = soup.title.string.split('»')[0]
     else:
         manga_name  = soup.find("div", {"id": "info"}).h1.text.encode('utf-8')
-    manga_image_id  = int(soup.find("div", {"id": "cover"}).img['src'].split('/')[4])
+    manga_image_id  = int(soup.find("div", {"id": "cover"}).img['data-src'].split('/')[4])
 
     # Find Manga Pages Count
     for element in soup.find("div", {"id": "info"}).find_all('div'):
